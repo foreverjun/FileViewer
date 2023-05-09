@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FileViewer</string>
+    <string name="fileManager">Файлы</string>
+    <string name="changedFiles">Измененное</string>
+</resources>
