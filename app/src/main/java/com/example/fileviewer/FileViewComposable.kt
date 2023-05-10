@@ -1,6 +1,8 @@
 package com.example.fileviewer
 
-import android.util.Log
+import android.content.Intent
+import android.webkit.MimeTypeMap
+import android.webkit.MimeTypeMap.getFileExtensionFromUrl
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,12 +10,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -131,8 +135,8 @@ fun FileViewerScreen(viewModel: FileViewViewModel, rootPath: String) {
                     item {
                         FileCard(
                             name = elem.name,
-                            onClick = { },
                             size = (elem.size / (1024)).toString() + " KB",
+                            path = elem.path,
                             creationDate = SimpleDateFormat(
                                 "dd/MM/yyyy",
                                 Locale.getDefault()
@@ -166,8 +170,8 @@ fun ChangedFilesScreen(viewModel: ChangedFilesViewModel) {
                 item {
                     FileCard(
                         name = elem.name,
-                        onClick = { },
                         size = (elem.size / (1024)).toString() + " KB",
+                        path = elem.path,
                         creationDate = SimpleDateFormat(
                             "dd/MM/yyyy",
                             Locale.getDefault()
@@ -189,7 +193,7 @@ fun DirectoryCard(name: String, onClick: () -> Unit) {
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_baseline_folder_24),
@@ -210,9 +214,11 @@ fun DirectoryCard(name: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun FileCard(name: String, size: String, creationDate: String, onClick: () -> Unit) {
+fun FileCard(name: String, path: String, size: String, creationDate: String) {
+    val appContext = LocalContext.current.applicationContext
     //set the icon depends on the file type
-    val extension = name.split(".").last()
+    var extension = name.split(".").last()
+    if (extension == name) extension = ""
     val icon = when (extension) {
         "pdf" -> R.drawable.icons8_pdf_48
         "jpg" -> R.drawable.icons8_jpg_48
@@ -223,20 +229,31 @@ fun FileCard(name: String, size: String, creationDate: String, onClick: () -> Un
         else -> R.drawable.icons8_file_48
     }
     Card(
-        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max).clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max).clickable {
+            val uri =
+                FileProvider.getUriForFile(appContext, BuildConfig.APPLICATION_ID + ".fileprovider", File(path))
+            val  newIntent = Intent(Intent.ACTION_VIEW)
+            val  mimeType = getFileExtensionFromUrl(uri.toString())
+            if (mimeType != null){
+                val type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+                newIntent.setDataAndType(uri,type)
+                newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                appContext.startActivity(newIntent)
+            }
+             },
         backgroundColor = MaterialTheme.colors.background
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 tint = Color.Unspecified,
                 painter = painterResource(icon),
                 contentDescription = "File",
-                modifier = Modifier.padding(horizontal = 8.dp).size(48.dp)
+                modifier = Modifier.padding(horizontal = 8.dp).size(48.dp).weight(0.15f)
             )
-            Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 8.dp).weight(0.7f)) {
                 Text(
                     text = name,
                     color = MaterialTheme.colors.onBackground,
@@ -253,6 +270,31 @@ fun FileCard(name: String, size: String, creationDate: String, onClick: () -> Un
                     )
                 }
             }
+
+            IconButton(
+                onClick = {
+                        val file = File(path)
+                        if (file.exists()) {
+                            val uri =
+                                FileProvider.getUriForFile(appContext, BuildConfig.APPLICATION_ID + ".fileprovider", file)
+                            val intent = Intent(Intent.ACTION_SEND)
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            intent.type = "*/*"
+                            intent.putExtra(Intent.EXTRA_STREAM, uri)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            appContext.startActivity(intent)
+                        }
+                },
+                modifier = Modifier.align(Alignment.CenterVertically).weight(0.15f)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_share_24),
+                    tint = MaterialTheme.colors.onBackground,
+                    contentDescription = "Share",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
         }
     }
 

@@ -1,15 +1,10 @@
 package com.example.fileviewer
 
-import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.attribute.FileTime
 
 class FileViewViewModel : ViewModel() {
     var currentDirectoryPath by mutableStateOf("")

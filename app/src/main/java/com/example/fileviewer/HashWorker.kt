@@ -2,17 +2,13 @@ package com.example.fileviewer
 
 import android.content.Context
 import android.os.Environment
-import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.example.fileviewer.database.FileHashesDao
 import com.example.fileviewer.database.FileHashesDatabase
 import com.example.fileviewer.database.FilesHashes
 import java.io.File
 import java.io.FileInputStream
-import java.security.MessageDigest
 import java.util.zip.CRC32
-import java.util.zip.Checksum
 
 class HashWorker(appContext: Context, workerParams: WorkerParameters) :
     Worker(appContext, workerParams) {

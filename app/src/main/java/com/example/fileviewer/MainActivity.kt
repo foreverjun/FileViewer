@@ -28,22 +28,20 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val workRequestId = (application as FilesManagerApplication).workRequestId
         if (workRequestId != null) {
             WorkManager.getInstance(this)
                 .getWorkInfoByIdLiveData(workRequestId)
-                .observe(this, Observer { workInfo ->
+                .observe(this) { workInfo ->
                     if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
-                        val outputData = workInfo.outputData
                         changedFilesViewModel.updateWorkerStatus(LoadingState.LOADED)
                     }
-                })
+                }
         }
 
         setContent {
             FileViewerTheme {
-                val storagePermission = rememberPermissionState(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                val storagePermission = rememberPermissionState(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 if (storagePermission.status.isGranted) {
                     if (viewModel.currentDirectoryPath == "") {
                         viewModel.setCurrentDirectory(Environment.getExternalStorageDirectory().absolutePath)
