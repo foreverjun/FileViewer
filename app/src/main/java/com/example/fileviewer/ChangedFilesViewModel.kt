@@ -33,6 +33,9 @@ class ChangedFilesViewModel(appContext : Context) : ViewModel() {
                     )
                 }
             }
+            if (status == LoadingState.ERROR) {
+                changedFiles = listOf()
+            }
         }
     }
 
@@ -45,5 +48,6 @@ class ChangedFilesViewModel(appContext : Context) : ViewModel() {
 
 enum class LoadingState {
     LOADING,
-    LOADED
+    LOADED,
+    ERROR
 }

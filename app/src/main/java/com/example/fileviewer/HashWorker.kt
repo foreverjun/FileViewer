@@ -17,7 +17,6 @@ class HashWorker(appContext: Context, workerParams: WorkerParameters) :
         val db = FileHashesDatabase.getInstance(applicationContext)
         val dao = db.fileHashesDao()
         val path = inputData.getString("path") ?: Environment.getExternalStorageDirectory().absolutePath
-        dao.setAllIsModifiedToFalse()
         dao.setAllIsDeletedToTrue()
 
         val queue = ArrayDeque<File>()
@@ -32,11 +31,13 @@ class HashWorker(appContext: Context, workerParams: WorkerParameters) :
             } else {
                 val hash = getFileHash(file)
                 if (hash != null) {
-                    val fileHashes = dao.getByPath(file.absolutePath)
-                    if (fileHashes?.firstName != null) {
-                        dao.updateHash(file.absolutePath, hash)
+                    val fileHashes = dao.getAndSetIsDeletedToFalse(file.absolutePath)
+                    if (fileHashes?.hash != null) {
+                        if (fileHashes.hash != hash) {
+                            dao.updateHash(file.absolutePath, hash, true)
+                        }
                     } else {
-                        dao.insert(FilesHashes(file.absolutePath, hash, hash, false, false))
+                        dao.insert(FilesHashes(file.absolutePath, hash, false, false))
                     }
 
                 }

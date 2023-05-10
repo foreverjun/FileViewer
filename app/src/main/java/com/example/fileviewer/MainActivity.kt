@@ -12,7 +12,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Observer
 
 import androidx.navigation.compose.rememberNavController
 import androidx.work.WorkInfo
@@ -37,11 +36,13 @@ class MainActivity : ComponentActivity() {
                         changedFilesViewModel.updateWorkerStatus(LoadingState.LOADED)
                     }
                 }
+        } else {
+            changedFilesViewModel.updateWorkerStatus(LoadingState.ERROR)
         }
 
         setContent {
             FileViewerTheme {
-                val storagePermission = rememberPermissionState(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                val storagePermission = rememberPermissionState(android.Manifest.permission.READ_EXTERNAL_STORAGE)
                 if (storagePermission.status.isGranted) {
                     if (viewModel.currentDirectoryPath == "") {
                         viewModel.setCurrentDirectory(Environment.getExternalStorageDirectory().absolutePath)

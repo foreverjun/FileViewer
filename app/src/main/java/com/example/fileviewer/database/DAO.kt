@@ -23,9 +23,22 @@ interface FileHashesDao {
     @Query("SELECT * FROM file_hashes WHERE path = :path")
     fun getByPath(path: String): FilesHashes?
 
+    //set isDeleted to false
+    @Query("UPDATE file_hashes SET is_deleted = 0 WHERE path = :path")
+    fun setIsDeletedToFalse(path: String)
+
+    //get and set isDeleted to false transaction
+    fun getAndSetIsDeletedToFalse(path: String): FilesHashes? {
+        val fileHashes = getByPath(path)
+        if (fileHashes != null) {
+            setIsDeletedToFalse(path)
+        }
+        return fileHashes
+    }
+
     //update hash and set old hash from new hash. if they are not equal then set isModified to true
-    @Query("UPDATE file_hashes SET old_hash = new_hash, new_hash = :newHash, is_modified = (old_hash != new_hash), is_deleted = 0 WHERE path = :path")
-    fun updateHash(path: String, newHash: Long)
+    @Query("UPDATE file_hashes SET hash = :newHash, is_modified = :isModified, is_deleted = 0 WHERE path = :path")
+    fun updateHash(path: String, newHash: Long, isModified : Boolean)
 
     //delete isDeleted files
     @Query("DELETE FROM file_hashes WHERE is_deleted = 1")
